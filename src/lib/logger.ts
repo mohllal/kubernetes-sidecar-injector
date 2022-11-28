@@ -27,7 +27,8 @@ const requestLoggerMiddlewareOptions: LoggerOptions = {
     }
     return logLevel;
   },
-}
+};
+
 export const requestLoggerMiddleware: RequestHandler = 
   expressWinston.logger(requestLoggerMiddlewareOptions);
 
@@ -36,6 +37,7 @@ const errorLoggerMiddlewareOptions: ErrorLoggerOptions = {
   metaField: null,
   requestWhitelist: ['query', 'body'],
   msg: '{{req.method}} {{req.path}} {{err.message}}',
-}
+};
+
 export const errorLoggerMiddleware: ErrorRequestHandler =
   expressWinston.errorLogger(errorLoggerMiddlewareOptions);

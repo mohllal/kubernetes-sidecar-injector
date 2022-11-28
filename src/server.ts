@@ -5,7 +5,7 @@ import 'express-async-errors';
 
 import apiRouter from '@routes/api';
 import { HTTPError } from '@shared/errors';
-import logger, { requestLoggerMiddleware, errorLoggerMiddleware } from '@lib/logger'
+import logger, { requestLoggerMiddleware, errorLoggerMiddleware } from '@lib/logger';
 
 const app = express();
 
