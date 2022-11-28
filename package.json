@@ -24,7 +24,8 @@
     "@lib": "dist/lib",
     "@services": "dist/services",
     "@shared": "dist/shared",
-    "@routes": "dist/routes"
+    "@routes": "dist/routes",
+    "@type": "dist/types"
   },
   "dependencies": {
     "@kubernetes/client-node": "^0.17.0",
