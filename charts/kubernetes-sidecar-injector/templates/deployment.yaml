@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "kubernetes-sidecar-injector.fullname" . }}
+  labels:
+    {{- include "kubernetes-sidecar-injector.labels" . | nindent 4 }}
+  {{- with .Values.deployment.annotations }}
+  annotations:
+    {{- toYaml . | nindent 8 }}
+  {{- end }}
+spec:
+  replicas: {{ .Values.deployment.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "kubernetes-sidecar-injector.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.deployment.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+        checksum/config: {{ include (print $.Template.BasePath "/admission-controller.yaml") . | sha256sum }}
+      {{- end }}
+      labels:
+        {{- include "kubernetes-sidecar-injector.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.deployment.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.deployment.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.deployment.securityContext | nindent 12 }}
+          image: "{{ .Values.deployment.image.repository }}:{{ .Values.deployment.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.deployment.image.pullPolicy }}
+          ports:
+            - name: https
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          # livenessProbe:
+          #   httpGet:
+          #     path: /health/liveness
+          #     port: {{ .Values.service.targetPort }}
+          #     scheme: HTTPS
+          # readinessProbe:
+          #   httpGet:
+          #     path: /health/readiness
+          #     port: {{ .Values.service.targetPort }}
+          #     scheme: HTTPS
+          env:
+          {{- range $key, $value := .Values.deployment.env }}
+            - name: {{ $key }}
+              value: {{ tpl $value $ | quote }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.deployment.resources | nindent 12 }}
+          volumeMounts:
+          - name: admission-controller-cert
+            mountPath: "/var/run/secrets/certs"
+            readOnly: true
+      {{- with .Values.deployment.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.deployment.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.deployment.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      volumes:
+      - name: admission-controller-cert
+        secret:
+          secretName: {{ template "kubernetes-sidecar-injector.secretName" . }}

@@ -1,0 +1,59 @@
+{{ $tls := fromYaml ( include "kubernetes-sidecar-injector.gen-certs" . ) }}
+{{- if .Values.admission.secret.create }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ template "kubernetes-sidecar-injector.secretName" . }}
+  labels:
+    {{- include "kubernetes-sidecar-injector.labels" . | nindent 4 }}
+  {{- with .Values.admission.secret.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+type: Opaque
+data:
+  tls-cert-file: {{ $tls.clientCert }}
+  tls-private-key-file: {{ $tls.clientKey }}
+{{- end }}
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: {{ template "kubernetes-sidecar-injector.admissionName" . }}
+  labels:
+    {{- include "kubernetes-sidecar-injector.labels" . | nindent 4 }}
+  {{- with .Values.admission.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+webhooks:
+- name: {{ include "kubernetes-sidecar-injector.service.fullname" . }}
+  admissionReviewVersions:
+    - v1
+  sideEffects: {{ .Values.admission.sideEffects | default "NoneOnDryRun" | quote }}
+  reinvocationPolicy: {{ .Values.admission.reinvocationPolicy | default "Never" | quote }}
+  timeoutSeconds: 10
+  objectSelector:
+    matchExpressions:
+    - key: sidecar.me/inject
+      operator: In
+      values:
+      - "True"
+      - "true"
+  rules:
+  - apiGroups:
+    - ""
+    apiVersions:
+    - v1
+    operations:
+    - CREATE
+    resources:
+    - pods
+    scope: '*'
+  clientConfig:
+    service:
+      namespace: {{ .Release.Namespace }}
+      name: {{ template "kubernetes-sidecar-injector.serviceName" . }}
+      path: "/mutation/pod"
+    caBundle: {{ $tls.caCert }}

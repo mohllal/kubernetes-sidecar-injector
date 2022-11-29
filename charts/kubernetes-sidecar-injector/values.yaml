@@ -1,0 +1,107 @@
+# Default values for kubernetes-sidecar-injector.
+
+deployment:
+  replicaCount: 1
+
+  image:
+    repository: mohllal/kubernetes-sidecar-injector
+    pullPolicy: Always
+    # Overrides the image tag whose default is the chart appVersion.
+    tag: latest
+
+  imagePullSecrets: []
+
+  annotations: {}
+
+  podAnnotations: {}
+
+  podSecurityContext: {}
+    # fsGroup: 2000
+
+  securityContext: {}
+    # capabilities:
+    #   drop:
+    #   - ALL
+    # readOnlyRootFilesystem: true
+    # runAsNonRoot: true
+    # runAsUser: 1000
+
+  resources: {}
+    # We usually recommend not to specify default resources and to leave this as a conscious
+    # choice for the user. This also increases chances charts run on environments with little
+    # resources, such as Minikube. If you do want to specify resources, uncomment the following
+    # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+    # limits:
+    #   cpu: 100m
+    #   memory: 128Mi
+    # requests:
+    #   cpu: 100m
+    #   memory: 128Mi
+
+  nodeSelector: {}
+
+  tolerations: []
+
+  affinity: {}
+
+  env:
+    NODE_ENV: "development"
+    HTTPS_PORT: "8443"
+    HTTPS_ENABLED: "true"
+    TLS_PRIVATE_KEY_FILE: "/var/run/secrets/certs/tls-private-key-file"
+    TLS_CERT_FILE: "/var/run/secrets/certs/tls-cert-file"
+
+service:
+  # The name of the service to use.
+  # If not set, a name is generated using the fullname template
+  name: ""
+
+  type: ClusterIP
+
+  port: 443
+
+  targetPort: 8443
+
+  # Annotations to add to service. (Optional)
+  annotations: {}
+
+admission:
+  # The name of the admission to use.
+  # If not set, a name is generated using the fullname template
+  name: ""
+
+  # default to NoneOnDryRun
+  sideEffects: ""
+
+  # default to Never
+  reinvocationPolicy: ""
+
+  # Annotations to add to service. (Optional)
+  annotations: {}
+
+  # admission CA can be used to override the Certs that will be used
+  # to sign the keys used by the admission operator.
+  ca:
+    # disable if manually creating certs
+    # provide cert and key via --set-file
+    create: true
+    # # A base64 encoded PEM format certificate
+    # cert: ""
+    # # A base64 encoded PEM format private key
+    # key: ""
+    # Expiry time of CA in days for generated certs
+    expiration: 365
+
+  # admission secret with client certs mounted within the admission controller.
+  secret:
+    create: true
+    # # name of the secret (auto-generated)
+    # name: ""
+    # # PEM format certificate (auto-generated)
+    # # override via --set-file
+    # cert: ""
+    # # PEM format certificate (auto-generated)
+    # # override via --set-file
+    # key: ""
+    # Annotations to add to admission secret. (Optional)
+    annotations: {}
